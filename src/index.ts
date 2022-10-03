@@ -32,6 +32,7 @@ export = (app: Probot) => {
 
     let latestReviewsOnly: typeof existingReviews['data'] = [];
     for (const review of existingReviews.data) {
+      if (!review.body.startsWith('docs:') || review.user?.login === DOCS_REVIEWER_BOT_LOGIN) continue;
       latestReviewsOnly = latestReviewsOnly.filter(tReview => tReview.user?.login !== review.user?.login);
       latestReviewsOnly.push(review);
     }
