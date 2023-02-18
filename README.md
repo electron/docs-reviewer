@@ -5,6 +5,12 @@
 ## Setup
 
 ```sh
+# Clone this repository
+git clone https://github.com/electron/docs-reviewer.git
+
+# Go into the repository
+cd docs-reviewer
+
 # Install dependencies
 yarn
 
