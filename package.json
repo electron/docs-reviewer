@@ -16,7 +16,7 @@
     "start": "probot run ./lib/index.js"
   },
   "dependencies": {
-    "probot": "^12.2.4"
+    "probot": "^12.3.3"
   },
   "devDependencies": {
     "@types/node": "^18.0.0",
