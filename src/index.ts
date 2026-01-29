@@ -13,17 +13,17 @@ export = (app: Probot) => {
   app.on('pull_request_review', async (context) => {
     if (!context.payload.review.body?.startsWith('docs:')) return;
 
-    const userDoingReview = context.payload.review.user.login;
+    const userDoingReview = context.payload.review.user?.login;
 
-    const ecosystemMembers = await context.octokit.teams.listMembersInOrg({
+    const ecosystemMembers = await context.octokit.rest.teams.listMembersInOrg({
       org: 'electron',
       team_slug: WG_ECOSYSTEM_TEAM_NAME,
     });
 
     const ecosystemMemberLogins = new Set(ecosystemMembers.data.map((user) => user.login));
-    if (!ecosystemMemberLogins.has(userDoingReview)) return;
+    if (!userDoingReview || !ecosystemMemberLogins.has(userDoingReview)) return;
 
-    const existingReviews = await context.octokit.pulls.listReviews({
+    const existingReviews = await context.octokit.rest.pulls.listReviews({
       owner: context.payload.repository.owner.login,
       repo: context.payload.repository.name,
       pull_number: context.payload.pull_request.number,
@@ -57,7 +57,7 @@ export = (app: Probot) => {
     }
 
     if (resultantState === ReviewState.APPROVED && currentState !== resultantState) {
-        await context.octokit.pulls.createReview({
+        await context.octokit.rest.pulls.createReview({
           owner: context.payload.repository.owner.login,
           repo: context.payload.repository.name,
           pull_number: context.payload.pull_request.number,
@@ -65,7 +65,7 @@ export = (app: Probot) => {
           body: 'Approving on behalf of the Electron Docs Team',
         });
     } else if (resultantState === ReviewState.CHANGES_REQUESTED && currentState !== resultantState) {
-        await context.octokit.pulls.createReview({
+        await context.octokit.rest.pulls.createReview({
           owner: context.payload.repository.owner.login,
           repo: context.payload.repository.name,
           pull_number: context.payload.pull_request.number,
@@ -73,7 +73,7 @@ export = (app: Probot) => {
           body: 'Requesting changes on behalf of the Electron Docs Team',
         });
     } else if (resultantState === ReviewState.NEUTRAL && currentState !== resultantState && currentBotReview) {
-      await context.octokit.pulls.dismissReview({
+      await context.octokit.rest.pulls.dismissReview({
         owner: context.payload.repository.owner.login,
         repo: context.payload.repository.name,
         pull_number: context.payload.pull_request.number,
