@@ -17,7 +17,9 @@ WORKDIR /app
 # root's $HOME, so `yarn` in CMD starts as uid 1000 without fetching Yarn from
 # repo.yarnpkg.com on every pod start.
 ENV COREPACK_HOME=/usr/local/share/corepack
-RUN corepack enable
+# tini: see ENTRYPOINT.
+RUN apk add --no-cache tini \
+ && corepack enable
 COPY package.json yarn.lock .yarnrc.yml ./
 COPY .yarn/ ./.yarn/
 # Production deps only; `focus` also works on a single-workspace repo.
@@ -35,4 +37,8 @@ ENV NODE_ENV=production \
 EXPOSE 8080
 # No HEALTHCHECK: Kubernetes probes probot's GET /ping (set in the overlay).
 # probot reads PORT.
+# tini runs as PID 1 and forwards SIGTERM to yarn/probot; probot installs no
+# SIGTERM handler, so without it the kernel ignores the signal and every pod
+# waits out the 30s grace period before being SIGKILLed.
+ENTRYPOINT ["/sbin/tini", "--"]
 CMD ["yarn", "probot", "run", "./lib/index.js"]
